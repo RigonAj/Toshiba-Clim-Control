@@ -1,0 +1,350 @@
+/* Interface des climatiseurs Toshiba - feuille de style unique.
+   Aucune police ni image externe : tout est servi par le boitier. */
+
+:root {
+  color-scheme: light dark;
+
+  --bg:        #f2f4f7;
+  --surface:   #ffffff;
+  --surface-2: #f7f8fa;
+  --line:      #dfe3e9;
+  --text:      #17202a;
+  --text-dim:  #5d6b7a;
+  --accent:    #0e639c;
+  --accent-ct: #ffffff;
+  --on:        #1a8b5a;
+  --off:       #8b93a0;
+  --warn:      #a06000;
+  --danger:    #b3261e;
+  --radius:    14px;
+  --shadow:    0 1px 2px rgba(16,24,40,.06), 0 4px 16px rgba(16,24,40,.06);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg:        #12161b;
+    --surface:   #1a1f26;
+    --surface-2: #212832;
+    --line:      #2c3542;
+    --text:      #e6eaf0;
+    --text-dim:  #9aa7b6;
+    --accent:    #3d9ad8;
+    --accent-ct: #08141d;
+    --on:        #34c48a;
+    --off:       #6d7684;
+    --warn:      #e0a44a;
+    --danger:    #ef7a72;
+    --shadow:    0 1px 2px rgba(0,0,0,.4), 0 6px 20px rgba(0,0,0,.3);
+  }
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  padding: 0 max(12px, env(safe-area-inset-left)) calc(24px + env(safe-area-inset-bottom));
+  background: var(--bg);
+  color: var(--text);
+  font: 16px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  -webkit-text-size-adjust: 100%;
+}
+
+h1, h2 { margin: 0; font-weight: 650; }
+h1 { font-size: 1.25rem; }
+h2 { font-size: 1.15rem; }
+
+/* ------------------------------- entete ------------------------------ */
+
+.top {
+  display: flex; align-items: center; gap: 12px;
+  max-width: 900px; margin: 0 auto; padding: 18px 4px 12px;
+}
+.brand { flex: 1; min-width: 0; }
+.brand .sub { margin: 2px 0 0; color: var(--text-dim); font-size: .85rem; }
+#clock-warn { color: var(--warn); }
+
+.icon {
+  flex: none; width: 40px; height: 40px; padding: 8px;
+  border: 1px solid var(--line); border-radius: 50%;
+  background: var(--surface); color: var(--text-dim); cursor: pointer;
+}
+.icon svg { width: 100%; height: 100%; fill: none; stroke: currentColor; stroke-width: 1.6; }
+.icon:hover { color: var(--text); }
+
+.banner {
+  max-width: 900px; margin: 0 auto 12px; padding: 10px 14px;
+  border: 1px solid var(--line); border-left: 4px solid var(--warn);
+  border-radius: 8px; background: var(--surface); color: var(--text-dim);
+  font-size: .9rem;
+}
+
+.foot {
+  max-width: 900px; margin: 20px auto 0; padding: 0 4px;
+  color: var(--text-dim); font-size: .8rem; text-align: center;
+}
+.foot .dot { margin: 0 6px; }
+
+/* ------------------------------- cartes ------------------------------ */
+
+main {
+  max-width: 900px; margin: 0 auto;
+  display: grid; gap: 16px;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  align-items: start;
+}
+
+.card {
+  background: var(--surface); border: 1px solid var(--line);
+  border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden;
+}
+.card.is-offline .card-body { opacity: .45; pointer-events: none; }
+
+.card-head {
+  display: flex; align-items: center; gap: 12px;
+  padding: 16px 16px 12px;
+}
+.card-title { flex: 1; min-width: 0; }
+.chips { margin: 4px 0 0; display: flex; flex-wrap: wrap; gap: 6px; }
+
+.chip {
+  display: inline-block; padding: 2px 8px; border-radius: 999px;
+  background: var(--surface-2); border: 1px solid var(--line);
+  color: var(--text-dim); font-size: .75rem; white-space: nowrap;
+}
+.chip.ok     { color: var(--on);     border-color: color-mix(in srgb, var(--on) 40%, var(--line)); }
+.chip.bad    { color: var(--danger); border-color: color-mix(in srgb, var(--danger) 40%, var(--line)); }
+.chip.stale  { color: var(--warn);   border-color: color-mix(in srgb, var(--warn) 40%, var(--line)); }
+.chip-lock {
+  color: var(--warn);
+  border-color: color-mix(in srgb, var(--warn) 45%, var(--line));
+  background: color-mix(in srgb, var(--warn) 12%, transparent);
+}
+
+.power {
+  flex: none; width: 52px; height: 52px; padding: 12px;
+  border: 1px solid var(--line); border-radius: 50%;
+  background: var(--surface-2); color: var(--off); cursor: pointer;
+  transition: background .15s, color .15s, border-color .15s;
+}
+.power svg { width: 100%; height: 100%; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; }
+.power[aria-pressed="true"] { background: var(--on); border-color: var(--on); color: #fff; }
+
+.card-body { padding: 0 16px 16px; }
+
+/* ---------------------------- temperature ---------------------------- */
+
+.temp {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 8px; padding: 6px 0 14px;
+}
+.step {
+  width: 56px; height: 56px; flex: none;
+  border: 1px solid var(--line); border-radius: 50%;
+  background: var(--surface-2); color: var(--text);
+  font-size: 1.6rem; line-height: 1; cursor: pointer;
+}
+.step:active { background: var(--line); }
+.step:disabled { opacity: .35; cursor: default; }
+.temp-read { display: flex; align-items: baseline; justify-content: center; flex: 1; }
+.temp-val { font-size: 3rem; font-weight: 300; letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
+.temp-unit { font-size: 1.1rem; color: var(--text-dim); margin-left: 2px; }
+.card.is-standby .temp-val,
+.card.is-standby .temp-unit { color: var(--text-dim); opacity: .5; }
+
+/* ------------------------------ champs ------------------------------- */
+
+.field { margin-bottom: 12px; }
+.field-row { display: flex; align-items: center; justify-content: space-between; }
+.field-label {
+  display: block; margin-bottom: 6px;
+  color: var(--text-dim); font-size: .8rem; text-transform: uppercase; letter-spacing: .04em;
+}
+.field-row .field-label { margin-bottom: 0; }
+
+.warn-flag {
+  margin-left: 6px; padding: 1px 6px; border-radius: 999px;
+  background: color-mix(in srgb, var(--warn) 16%, transparent);
+  color: var(--warn); font-size: .7rem; text-transform: none; letter-spacing: 0;
+}
+
+.seg {
+  display: flex; gap: 4px; padding: 4px;
+  background: var(--surface-2); border: 1px solid var(--line); border-radius: 10px;
+}
+.seg button {
+  flex: 1; min-width: 0; padding: 9px 4px;
+  border: 0; border-radius: 7px; background: transparent; color: var(--text-dim);
+  font: inherit; font-size: .9rem; cursor: pointer; white-space: nowrap;
+  overflow: hidden; text-overflow: ellipsis;
+}
+.seg button.on { background: var(--accent); color: var(--accent-ct); }
+.seg button:disabled { opacity: .4; cursor: default; }
+.seg-small button { padding: 6px 10px; font-size: .85rem; flex: none; }
+
+.switch { display: inline-flex; align-items: center; gap: 8px; cursor: pointer; }
+.switch input { position: absolute; opacity: 0; width: 0; height: 0; }
+.switch .track {
+  width: 46px; height: 28px; flex: none; border-radius: 999px;
+  background: var(--line); position: relative; transition: background .15s;
+}
+.switch .track::after {
+  content: ""; position: absolute; top: 3px; left: 3px;
+  width: 22px; height: 22px; border-radius: 50%; background: var(--surface);
+  box-shadow: 0 1px 3px rgba(0,0,0,.3); transition: transform .15s;
+}
+.switch input:checked + .track { background: var(--on); }
+.switch input:checked + .track::after { transform: translateX(18px); }
+.switch input:focus-visible + .track { outline: 2px solid var(--accent); outline-offset: 2px; }
+.switch-text { font-size: .9rem; }
+
+.meta { margin: 10px 0 0; color: var(--text-dim); font-size: .8rem; }
+
+/* ------------------------------ panneaux ----------------------------- */
+
+.panel {
+  margin-top: 14px; border: 1px solid var(--line); border-radius: 10px;
+  background: var(--surface-2);
+}
+.panel summary {
+  display: flex; align-items: center; gap: 8px;
+  padding: 11px 14px; cursor: pointer; font-size: .92rem; font-weight: 550;
+  list-style: none;
+}
+.panel summary::-webkit-details-marker { display: none; }
+.panel summary::after {
+  content: ""; margin-left: auto; width: 8px; height: 8px;
+  border-right: 2px solid var(--text-dim); border-bottom: 2px solid var(--text-dim);
+  transform: rotate(45deg) translate(-2px, -2px); transition: transform .15s;
+}
+.panel[open] summary::after { transform: rotate(225deg) translate(-2px, -2px); }
+.summary-note { color: var(--text-dim); font-weight: 400; font-size: .82rem; }
+.panel-body { padding: 0 14px 14px; }
+
+.hint { margin: 0 0 10px; color: var(--text-dim); font-size: .8rem; }
+.hint-lock {
+  margin: 10px 0 0; padding: 8px 10px; border-radius: 8px;
+  border-left: 3px solid var(--warn);
+  background: color-mix(in srgb, var(--warn) 10%, transparent);
+}
+
+/* ------------------------------- graphe ------------------------------ */
+
+.sched-head {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 12px; flex-wrap: wrap; margin-bottom: 10px;
+}
+/* Le graphe deborde la marge du panneau : chaque pixel gagne en largeur est un
+   pixel de precision sur 24 heures. */
+.graph-scroll { margin: 0 -12px; overflow: hidden; }
+/* Le graphe se met a l'echelle de la carte : sur telephone, un graphe plus
+   large que l'ecran serait impossible a faire defiler, `touch-action: none`
+   etant indispensable au deplacement des points. La saisie precise passe par
+   l'editeur de point situe juste en dessous. */
+.graph {
+  display: block; width: 100%; height: auto;
+  touch-action: none; user-select: none;
+}
+.g-grid   { stroke: var(--line); stroke-width: 1; }
+.g-axis   { fill: var(--text-dim); font-size: 17px; }
+.g-band   { fill: var(--surface); }
+.g-on     { stroke: var(--accent); stroke-width: 3; fill: none; stroke-linecap: round; }
+.g-off    { stroke: var(--off); stroke-width: 3; fill: none; stroke-dasharray: 6 5; stroke-linecap: round; }
+/* Segment « maintenu eteint » : trait plein, le boitier y intervient. */
+.g-off.g-lock { stroke: var(--warn); stroke-width: 4; stroke-dasharray: none; }
+.g-pt.off.lock { stroke: var(--warn); }
+.g-pt.off.lock.sel { fill: var(--warn); }
+.g-link   { stroke: var(--text-dim); stroke-width: 1.5; stroke-dasharray: 3 4; }
+.g-pt     { fill: var(--surface); stroke: var(--accent); stroke-width: 3; cursor: grab; }
+.g-pt.off { stroke: var(--off); }
+.g-pt.sel { fill: var(--accent); }
+.g-pt.sel.off { fill: var(--off); }
+.g-hit    { fill: transparent; cursor: grab; }
+.g-now    { stroke: var(--danger); stroke-width: 1.5; stroke-dasharray: 4 3; }
+
+.point-editor {
+  margin: 12px 0; padding: 12px; border: 1px solid var(--line);
+  border-radius: 10px; background: var(--surface);
+}
+.pe-grid { display: grid; gap: 10px; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); }
+.pe-grid label, .dlg-field {
+  display: flex; flex-direction: column; gap: 4px;
+  color: var(--text-dim); font-size: .78rem;
+}
+.pe-grid input, .pe-grid select, .dlg-field input {
+  padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px;
+  background: var(--surface-2); color: var(--text); font: inherit; font-size: .95rem;
+}
+.pe-row {
+  display: flex; align-items: center; flex-wrap: wrap; gap: 16px; margin-top: 12px;
+}
+.pe-row .btn-danger { margin-left: auto; }
+
+.sched-actions { display: flex; align-items: center; gap: 8px; margin-top: 12px; }
+.sched-status { color: var(--text-dim); font-size: .8rem; }
+
+.btn {
+  padding: 9px 14px; border: 1px solid var(--line); border-radius: 9px;
+  background: var(--surface); color: var(--text); font: inherit; font-size: .9rem; cursor: pointer;
+}
+.btn:disabled { opacity: .45; cursor: default; }
+.btn-primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ct); }
+.btn-danger  { color: var(--danger); border-color: color-mix(in srgb, var(--danger) 40%, var(--line)); }
+.btn-ghost   { background: transparent; }
+
+/* ----------------------------- diagnostic ---------------------------- */
+
+.diag { font-size: .85rem; }
+.diag table { width: 100%; border-collapse: collapse; margin-bottom: 10px; }
+.diag th, .diag td { padding: 5px 6px; text-align: left; border-bottom: 1px solid var(--line); vertical-align: top; }
+.diag th { color: var(--text-dim); font-weight: 500; white-space: nowrap; width: 1%; }
+.diag code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: .88em; word-break: break-all;
+}
+.diag .ok  { color: var(--on); }
+.diag .bad { color: var(--danger); }
+
+/* ------------------------------ dialogue ----------------------------- */
+
+dialog {
+  width: min(560px, calc(100vw - 24px)); padding: 0;
+  border: 1px solid var(--line); border-radius: var(--radius);
+  background: var(--surface); color: var(--text); box-shadow: var(--shadow);
+}
+dialog::backdrop { background: rgba(0,0,0,.45); }
+.dlg { padding: 20px; display: flex; flex-direction: column; gap: 14px; }
+.dlg-field { margin: 0; }
+.dlg-actions { display: flex; align-items: center; gap: 8px; }
+.dlg-actions .spacer { flex: 1; }
+
+.set-row {
+  display: grid; gap: 8px; grid-template-columns: 1fr 1.4fr auto;
+  align-items: center; margin-bottom: 8px;
+}
+.set-row input {
+  padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px;
+  background: var(--surface-2); color: var(--text); font: inherit; font-size: .9rem;
+  min-width: 0;
+}
+.set-row button {
+  width: 34px; height: 34px; border: 1px solid var(--line); border-radius: 8px;
+  background: var(--surface); color: var(--danger); cursor: pointer; font-size: 1.1rem; line-height: 1;
+}
+
+/* ------------------------------- toasts ------------------------------ */
+
+.toasts {
+  position: fixed; left: 50%; bottom: 16px; transform: translateX(-50%);
+  display: flex; flex-direction: column; gap: 8px; z-index: 10;
+  width: min(420px, calc(100vw - 24px)); pointer-events: none;
+}
+.toast {
+  padding: 10px 14px; border-radius: 10px; box-shadow: var(--shadow);
+  background: var(--text); color: var(--bg); font-size: .88rem;
+}
+.toast.err { background: var(--danger); color: #fff; }
+
+@media (max-width: 420px) {
+  .temp-val { font-size: 2.5rem; }
+  .step { width: 50px; height: 50px; }
+}

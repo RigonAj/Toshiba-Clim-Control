@@ -1,0 +1,23 @@
+# --- Artefacts de compilation (reconstructibles) ---
+.pio/
+build/
+sdkconfig
+sdkconfig.old
+managed_components/
+dependencies.lock
+
+# --- Secrets : ne doivent jamais entrer dans le depot (plan §16.3) ---
+secrets.h
+secrets.json
+*.key
+*.pem
+wg*.conf
+credentials*
+
+# --- Divers Windows / editeurs ---
+.claude/
+Thumbs.db
+desktop.ini
+.vscode/
+.idea/
+*.swp

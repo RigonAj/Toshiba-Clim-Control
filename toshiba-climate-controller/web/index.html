@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<meta name="theme-color" content="#0e639c">
+<title>Climatiseurs</title>
+<!-- Fichiers statiques servis depuis la partition `storage` (cahier v2 §4.2).
+     Aucune ressource externe : la page doit fonctionner hors ligne, en local,
+     et derriere WireGuard. -->
+<link rel="stylesheet" href="app.css">
+</head>
+<body>
+
+<header class="top">
+  <div class="brand">
+    <h1>Climatiseurs</h1>
+    <p class="sub"><span id="clock">--:--</span> <span id="clock-warn" hidden title="Le boîtier n'a pas encore synchronisé son heure : aucune action programmée ne sera exécutée (cahier v2 §3).">heure non synchronisée</span></p>
+  </div>
+  <button id="btn-settings" class="icon" type="button" aria-label="Réglages" title="Réglages">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15.5a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7Z"/><path d="M19.4 13a7.7 7.7 0 0 0 0-2l2-1.6-2-3.4-2.4 1a7.6 7.6 0 0 0-1.7-1L15 3.4h-4l-.3 2.6a7.6 7.6 0 0 0-1.7 1l-2.4-1-2 3.4L4.6 11a7.7 7.7 0 0 0 0 2l-2 1.6 2 3.4 2.4-1c.5.4 1.1.8 1.7 1l.3 2.6h4l.3-2.6c.6-.2 1.2-.6 1.7-1l2.4 1 2-3.4-2-1.6Z"/></svg>
+  </button>
+</header>
+
+<p id="banner" class="banner" hidden></p>
+
+<main id="devices"></main>
+
+<footer class="foot">
+  <span id="foot-versions"></span>
+  <span class="dot">·</span>
+  <span title="L'infrarouge est unidirectionnel : la clim ne confirme jamais la réception d'une commande (plan §9.3).">L'état affiché est une estimation</span>
+</footer>
+
+<!-- ------------------------------------------------------------------ -->
+<!-- Gabarit d'une carte appareil, clone une fois par boitier declare.    -->
+<!-- ------------------------------------------------------------------ -->
+<template id="tpl-device">
+<article class="card">
+  <header class="card-head">
+    <div class="card-title">
+      <h2 data-name>&mdash;</h2>
+      <p class="chips">
+        <span class="chip" data-conn>connexion&hellip;</span>
+        <span class="chip chip-ghost" data-conf hidden></span>
+        <span class="chip chip-lock" data-lock hidden title="Le planning maintient l'arrêt : toute commande vue à la télécommande est suivie d'un ordre d'arrêt.">maintenu éteint</span>
+      </p>
+    </div>
+    <button class="power" type="button" data-power aria-pressed="false" aria-label="Marche / Arrêt" title="Marche / Arrêt">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v9"/><path d="M7.5 6.3a7.5 7.5 0 1 0 9 0"/></svg>
+    </button>
+  </header>
+
+  <div class="card-body" data-body>
+
+    <div class="temp">
+      <button type="button" class="step" data-temp="-1" aria-label="Baisser la consigne">&minus;</button>
+      <div class="temp-read">
+        <span class="temp-val" data-temp-val>--</span><span class="temp-unit">&deg;C</span>
+      </div>
+      <button type="button" class="step" data-temp="1" aria-label="Augmenter la consigne">+</button>
+    </div>
+
+    <div class="field">
+      <span class="field-label">Mode <span class="warn-flag" data-warn="mode" hidden title="Encodage non encore validé par mesure (campagne plan §8.2).">non vérifié</span></span>
+      <div class="seg" data-modes role="group" aria-label="Mode"></div>
+    </div>
+
+    <div class="field">
+      <span class="field-label">Ventilation <span class="warn-flag" data-warn="fan" hidden title="Encodage non encore validé par mesure (campagne plan §8.2).">non vérifié</span></span>
+      <div class="seg" data-fans role="group" aria-label="Ventilation"></div>
+    </div>
+
+    <div class="field field-row">
+      <span class="field-label">Oscillation <span class="warn-flag" data-warn="swing" hidden title="Encodage non encore validé par mesure (campagne plan §8.2).">non vérifié</span></span>
+      <label class="switch"><input type="checkbox" data-swing><span class="track" aria-hidden="true"></span></label>
+    </div>
+
+    <p class="meta" data-updated></p>
+
+    <!-- --------------------------- Planning --------------------------- -->
+    <details class="panel" data-sched-panel>
+      <summary>
+        <span>Planning</span>
+        <span class="summary-note" data-sched-note></span>
+      </summary>
+      <div class="panel-body">
+
+        <div class="sched-head">
+          <label class="switch switch-inline">
+            <input type="checkbox" data-sched-enabled>
+            <span class="track" aria-hidden="true"></span>
+            <span class="switch-text">Actif</span>
+          </label>
+          <div class="seg seg-small" data-curves role="group" aria-label="Courbe">
+            <button type="button" data-curve="week" class="on">Semaine</button>
+            <button type="button" data-curve="weekend">Week-end</button>
+          </div>
+        </div>
+
+        <div class="graph-scroll">
+          <svg class="graph" data-graph viewBox="0 0 480 300" role="img" aria-label="Courbe de consigne sur 24 heures"></svg>
+        </div>
+        <p class="hint">Toucher la courbe pour ajouter un point, glisser pour le déplacer. Pas de 30 minutes.</p>
+
+        <div class="point-editor" data-point-editor hidden>
+          <div class="pe-grid">
+            <label>Heure<input type="time" step="1800" data-pe-time></label>
+            <label>Consigne<input type="number" data-pe-temp min="17" max="30" step="1"></label>
+            <label>Mode<select data-pe-mode></select></label>
+            <label>Ventilation<select data-pe-fan></select></label>
+          </div>
+          <div class="pe-row">
+            <label class="switch switch-inline"><input type="checkbox" data-pe-power><span class="track" aria-hidden="true"></span><span class="switch-text">Clim en marche</span></label>
+            <label class="switch switch-inline" data-pe-swing-row><input type="checkbox" data-pe-swing><span class="track" aria-hidden="true"></span><span class="switch-text">Oscillation</span></label>
+            <label class="switch switch-inline" data-pe-lock-row hidden><input type="checkbox" data-pe-lock><span class="track" aria-hidden="true"></span><span class="switch-text">Maintenir éteint</span></label>
+            <button type="button" class="btn btn-danger" data-pe-delete>Supprimer le point</button>
+          </div>
+          <p class="hint hint-lock" data-pe-lock-hint hidden>Pendant ce segment, toute commande vue à la télécommande est suivie d'un ordre d'arrêt, environ deux secondes après. L'infrarouge ne permet pas d'empêcher la clim de démarrer : elle s'allume, puis s'éteint. Une commande passée depuis cette page, elle, suspend le maintien jusqu'au point suivant.</p>
+        </div>
+
+        <div class="sched-actions">
+          <button type="button" class="btn btn-primary" data-sched-save disabled>Enregistrer</button>
+          <button type="button" class="btn" data-sched-revert disabled>Annuler</button>
+          <span class="sched-status" data-sched-status></span>
+        </div>
+      </div>
+    </details>
+
+    <!-- ------------------------- Diagnostic IR ------------------------ -->
+    <details class="panel" data-diag-panel>
+      <summary><span>Diagnostic infrarouge</span></summary>
+      <div class="panel-body">
+        <p class="hint">Compare la trame émise par le boîtier à celle que son propre TSOP redécode. C'est le contrôle du §14.2 : &laquo; vérifier que l'on émet bien ce que l'on croit &raquo;.</p>
+        <div data-diag class="diag"></div>
+        <button type="button" class="btn" data-diag-refresh>Rafraîchir</button>
+      </div>
+    </details>
+
+  </div>
+</article>
+</template>
+
+<!-- ------------------------------------------------------------------ -->
+<dialog id="settings">
+  <form method="dialog" class="dlg">
+    <h2>Réglages</h2>
+
+    <p class="hint">Les boîtiers sont symétriques (cahier v2 §4.1) : la page interroge chaque adresse directement. Laisser l'adresse vide pour désigner le boîtier qui sert cette page.</p>
+
+    <div id="set-devices"></div>
+    <button type="button" class="btn" id="set-add">Ajouter un boîtier</button>
+
+    <label class="dlg-field">Jeton d'accès
+      <input type="password" id="set-token" autocomplete="off" placeholder="envoyé en en-tête Authorization">
+    </label>
+
+    <div class="dlg-actions">
+      <button type="button" class="btn btn-ghost" id="set-reset">Réinitialiser</button>
+      <span class="spacer"></span>
+      <button type="button" class="btn" id="set-cancel">Annuler</button>
+      <button type="button" class="btn btn-primary" id="set-save">Enregistrer</button>
+    </div>
+  </form>
+</dialog>
+
+<div id="toasts" class="toasts" aria-live="polite"></div>
+
+<script src="app.js"></script>
+</body>
+</html>
